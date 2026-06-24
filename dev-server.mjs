@@ -1,17 +1,34 @@
-// =====================================================================
-//  PRIVATE RATE CARD  —  server-side only. Never shipped to the browser.
-//  Edit these numbers to change pricing everywhere. Redeploy to apply.
-// =====================================================================
-export const RATES = {
-  currency: '$',
-  engagementFee: 7500,                 // one-off per engagement
-  spot:  { rate: 1.20, min: 12000 },   // single voyage (per tonne)
-  recur: { rate: 1.00 },               // recurring program (per tonne, no retainer)
-  desk:  { retainer: 60000, rate: 0.60, term: 3, esc: 3 }, // outsourced desk
-  // Logistics contract negotiation (any mode: ocean, barge, rail, road,
-  // terminal handling, storage). Fixed project fee by complexity, NOT per tonne.
-  // Included (waived) on the outsourced-desk tier.
-  contract: { light: 6000, structured: 18000 },
-  freightCut: { low: 3, high: 6 },     // % reduction target vs benchmark (NOT guaranteed)
-  inhouse: { senior: 180000, ops: 110000, data: 40000, overhead: 35000, recruit: 45000, recruitYrs: 3 },
-};
+// Local dev server — serves static files and routes /api/* to the serverless
+// handlers, emulating Vercel. Run: node dev-server.mjs  (or: npm run dev)
+import http from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { extname, join } from 'node:path';
+import quote from './api/quote.js';
+import lead from './api/lead.js';
+
+const TYPES = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.png':'image/png' };
+const PORT = process.env.PORT || 3000;
+
+function wrap(res){
+  res.status = (c)=>{ res.statusCode=c; return res; };
+  res.json = (o)=>{ res.setHeader('Content-Type','application/json'); res.end(JSON.stringify(o)); return res; };
+  return res;
+}
+async function readBody(req){ return new Promise(r=>{ let b=''; req.on('data',c=>b+=c); req.on('end',()=>r(b)); }); }
+
+http.createServer(async (req,res)=>{
+  wrap(res);
+  const url = new URL(req.url, `http://localhost:${PORT}`);
+  if (url.pathname.startsWith('/api/')){
+    req.body = await readBody(req);
+    if (url.pathname === '/api/quote') return quote(req,res);
+    if (url.pathname === '/api/lead')  return lead(req,res);
+    return res.status(404).json({error:'no such api'});
+  }
+  let path = url.pathname === '/' ? '/index.html' : url.pathname;
+  try {
+    const data = await readFile(join(process.cwd(), path));
+    res.setHeader('Content-Type', TYPES[extname(path)] || 'application/octet-stream');
+    res.end(data);
+  } catch { res.statusCode=404; res.end('Not found'); }
+}).listen(PORT, ()=>console.log(`Pelorus dev server → http://localhost:${PORT}`));
