@@ -47,6 +47,12 @@ h2.sec{font-family:'Figtree';font-weight:700;font-size:clamp(26px,3.4vw,37px);co
 .navlinks a:hover{color:var(--gold)}
 .navlinks a.btn{color:#fff}
 .navlinks a.btn:hover{color:#fff;background:#9c7540;border-color:#9c7540}
+.menu-btn{display:none;background:none;border:0;cursor:pointer;color:var(--navy);padding:6px;margin:-6px}
+.menu-btn svg{width:30px;height:30px;display:block}
+.mobile-menu{display:none}
+.mobile-menu a{display:block;padding:14px 4px;font-family:'Figtree';font-weight:600;font-size:17px;color:var(--ink);border-top:1px solid var(--line)}
+.mobile-menu a:active{color:var(--gold)}
+.mobile-menu a.btn{margin-top:14px;text-align:center;background:var(--gold);color:#fff;border:1px solid var(--gold);border-radius:4px;padding:15px}
 .btn{font-family:'Figtree';font-weight:700;font-size:13.5px;letter-spacing:.04em;padding:12px 22px;border-radius:3px;background:var(--navy);color:#fff;border:1px solid var(--navy);transition:.2s}
 .btn:hover{background:#0d2c52}
 .btn.ghost{background:transparent;color:var(--navy);border:1px solid var(--gold)}
@@ -126,6 +132,8 @@ footer .ftbrand{display:flex;align-items:center;gap:12px;color:#cfd9e4}
 
 @media(max-width:900px){
  .navlinks{display:none}
+ .menu-btn{display:block}
+ .mobile-menu.open{display:block;padding:6px 0 16px}
  .hero-inner{flex-direction:column;min-height:0}
  .hero-text{padding:36px 0 30px}
  .hero-img{flex:none;height:300px;margin-right:0;width:100%;background-position:center}
@@ -171,7 +179,19 @@ footer .ftbrand{display:flex;align-items:center;gap:12px;color:#cfd9e4}
      <a href="#careers">Careers</a>
      <a href="#contact" class="btn">Start a conversation</a>
    </div>
+   <button class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu" onclick="toggleMenu(this)">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+   </button>
   </nav>
+  <div class="mobile-menu" id="mobileMenu">
+   <a href="#services" onclick="closeMenu()">What We Do</a>
+   <a href="#serve" onclick="closeMenu()">Who We Serve</a>
+   <a href="#model" onclick="closeMenu()">How We Work</a>
+   <a href="#why" onclick="closeMenu()">Why It Matters</a>
+   <a href="pricing.html">Pricing</a>
+   <a href="#careers" onclick="closeMenu()">Careers</a>
+   <a href="#contact" class="btn" onclick="closeMenu()">Start a conversation</a>
+  </div>
  </div>
  <div class="wrap">
   <div class="hero-inner">
@@ -311,4 +331,8 @@ footer .ftbrand{display:flex;align-items:center;gap:12px;color:#cfd9e4}
   <span>OCEAN · BARGE · RAIL · ROAD · TERMINAL &amp; STORAGE — INDEPENDENT LOGISTICS COMMERCIAL DESK</span>
   <span>© FREDHEIM LLC</span>
 </div></footer>
+<script>
+function toggleMenu(btn){var m=document.getElementById('mobileMenu');var open=m.classList.toggle('open');btn.setAttribute('aria-expanded',open?'true':'false');}
+function closeMenu(){var m=document.getElementById('mobileMenu');m.classList.remove('open');var b=document.querySelector('.menu-btn');if(b)b.setAttribute('aria-expanded','false');}
+</script>
 </body></html>
