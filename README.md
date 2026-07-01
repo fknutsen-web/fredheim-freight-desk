@@ -8,16 +8,41 @@ to the browser and never floats around as a document.
 
 ## What's here
 ```
-index.html        Homepage (your approved design) with a "Pricing" nav link
-pricing.html      The live configurator — calls the API, contains NO rates
-api/quote.js      POST: computes a quote from server-side rates
-api/lead.js       POST: recomputes server-side, stores the lead (Supabase)
+index.html        Homepage with an "Engagement Models" nav link
+pricing.html      Engagement Models — an interactive "build your commercial
+                  freight desk" configurator. Holds NO rates; asks the server
+                  for an indicative figure and degrades gracefully offline.
+api/quote.js      POST: computes a quote from server-side rates (legacy calc)
+api/estimate.js   POST: maps a configurator config → indicative engagement fee
+api/lead.js       POST: recomputes server-side, stores the lead (Supabase).
+                  Accepts either the legacy calc input or the configurator config.
 lib/rates.js      ← YOUR PRIVATE RATE CARD. Edit here, redeploy. Server-only.
 lib/calc.js       Shared pricing logic (same math the internal tool uses)
+lib/estimate.js   Maps configurator selections → indicative "from" figure.
+                  Single integration point for real pricing / quoting logic.
 db/schema.sql     Supabase table for captured leads (RLS-locked)
 dev-server.mjs    Run locally without Vercel
 .env.example      Environment variables to set
 ```
+
+### Engagement Models page (pricing.html)
+An interactive configurator (Step 1–6: engagement type, cargo, modes, annual
+volume, commercial services, geographic scope) for **long-term commercial
+partnerships** — there is no transactional single-shipment option. The three
+models are **Commercial Freight Desk** (recommended, 12-month minimum),
+**Freight Program Management** (12-month minimum) and **Strategic Supply Chain
+Advisory** (project-based). It is **configuration-first**: it shows the *fee
+structure* for the chosen engagement (Monthly Retainer or Hybrid / Per-Tonne
+Management Fee / Fixed-Fee Advisory Project) and a **recommended engagement**
+derived from the selections — **no public price is displayed**. The primary
+action is booking a 30-minute Commercial Review.
+
+The whole `config` object is exposed as `window.pelorusEngagement` so it can later
+be wired to CRM / HubSpot / Stripe / a client portal / automated proposal
+generation. `lib/estimate.js` + `/api/estimate` remain as server-side infrastructure
+for optional "starting from" ranges later (rate card stays server-only); `/api/lead`
+still records a server-computed indicative figure with each booking. The CTA falls
+back to email when the API isn't reachable (e.g. static hosting).
 
 ## Run locally
 ```
