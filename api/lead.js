@@ -3,6 +3,7 @@
 import { RATES } from '../lib/rates.js';
 import { computeTiers } from '../lib/calc.js';
 import { computeEstimate } from '../lib/estimate.js';
+import { toEngineIntake } from '../lib/intakeMap.js';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
@@ -27,10 +28,13 @@ export default async function handler(req, res) {
     geo: body.config.geo,
   } : null;
 
-  let quote, inputs, selectedTier;
+  let quote, inputs, selectedTier, engineIntake = null;
   if (config) {
     quote = computeEstimate(config, RATES);          // authoritative, server-side
-    inputs = { config, message: (body?.message || '').slice(0, 2000) };
+    // engineIntake: the lead already shaped for the Commercial Opportunity Assessment
+    // Engine (Excel), so the analyst pastes rather than re-keys.
+    engineIntake = toEngineIntake(config, body?.assessment || {});
+    inputs = { config, assessment: body?.assessment || null, engineIntake, message: (body?.message || '').slice(0, 2000) };
     selectedTier = body?.selectedTier || config.engagement || null;
   } else {
     const input = {
@@ -59,15 +63,15 @@ export default async function handler(req, res) {
   if (!url || !key) {
     // No DB configured yet — accept the lead but don't persist (demo mode).
     console.log('LEAD (not persisted — set SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY):', record);
-    return res.status(200).json({ ok: true, persisted: false });
+    return res.status(200).json({ ok: true, persisted: false, engineIntake });
   }
   try {
     const supabase = createClient(url, key, { auth: { persistSession: false } });
     const { data, error } = await supabase.from('pelorus_leads').insert(record).select('id').single();
     if (error) throw error;
-    return res.status(200).json({ ok: true, persisted: true, id: data.id });
+    return res.status(200).json({ ok: true, persisted: true, id: data.id, engineIntake });
   } catch (e) {
     console.error('lead insert failed:', e.message);
-    return res.status(200).json({ ok: true, persisted: false, error: 'store_failed' });
+    return res.status(200).json({ ok: true, persisted: false, error: 'store_failed', engineIntake });
   }
 }
